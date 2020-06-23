@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ratta.mapper.UserMapper">
+
+    <resultMap id="findByUserNameResult" type="com.ratta.domain.User">
+        <id column="id" property="id"/>
+        <result column="user_name" property="userName"/>
+        <result column="password" property="password"/>
+        <collection property="roles" ofType="com.ratta.domain.Role">
+            <id column="rid" property="id"/>
+            <result column="rname" property="name"/>
+            <result column="rkey" property="key"/>
+            <collection property="permissions" ofType="com.ratta.domain.Permission">
+                <id column="pid" property="id"/>
+                <result column="pname" property="name"/>
+                <result column="pkey" property="key"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+    <select id="findByUserName" resultMap="findByUserNameResult" parameterType="java.lang.String">
+        select
+          tu.id as id,
+          tu.user_name as user_name,
+          tu.password as password,
+          tr.id as rid,
+          tr.test_name as rname,
+          tr.test_key as rkey,
+          tp.id as pid,
+          tp.test_name as pname,
+          tp.test_key as pkey
+        from user tu
+        inner join role_user ru
+        on tu.id=ru.user_id
+        inner join role tr
+        on ru.role_id=tr.id
+        inner join permission_role pr
+        on tr.id = pr.role_id
+        inner join permission tp
+        on pr.permission_id = tp.id
+        where tu.user_name=#{userName}
+    </select>
+
+</mapper>
