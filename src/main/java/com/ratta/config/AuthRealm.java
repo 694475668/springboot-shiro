@@ -1,9 +1,11 @@
 package com.ratta.config;
 
+import com.ratta.domain.ActiverUser;
 import com.ratta.domain.Permission;
 import com.ratta.domain.Role;
 import com.ratta.domain.User;
 import com.ratta.service.UserService;
+import com.ratta.util.JwtUtil;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
@@ -41,11 +43,12 @@ public class AuthRealm extends AuthorizingRealm {
      */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        User user = (User) principalCollection.getPrimaryPrincipal();
+
+        ActiverUser activerUser = (ActiverUser) principalCollection.getPrimaryPrincipal();
         List<String> permissionList = new ArrayList<>();
         Set<String> roleNameSet = new HashSet<>();
         //获取用户的角色
-        Set<Role> roles = user.getRoles();
+        Set<Role> roles = activerUser.getUser().getRoles();
         if (!CollectionUtils.isEmpty(roles)) {
             roles.forEach(role -> {
                 roleNameSet.add(role.getKey());
@@ -79,11 +82,15 @@ public class AuthRealm extends AuthorizingRealm {
         if (null == user) {
             return null;
         }
+        //生成token,返回前端
+        String token = JwtUtil.createToken(user.getId(), user.getUserName());
+        //用来装返回前端token和用户信息《token给前端，user用在授权》
+        ActiverUser activerUser = new ActiverUser(token, user);
         //认证信息里存放账号密码, getName() 是当前Realm的继承方法,通常返回当前类名 :databaseRealm
         //盐也放进去
         //这样通过applicationContext-shiro.xml里配置的 HashedCredentialsMatcher 进行自动校验
         //我们这里使用AuthRealm
-        SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(user, user.getPassword(), ByteSource.Util.bytes(salt), this.getClass().getSimpleName());
+        SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(activerUser, user.getPassword(), ByteSource.Util.bytes(salt), this.getClass().getSimpleName());
         return info;
     }
 }

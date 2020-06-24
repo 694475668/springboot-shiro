@@ -1,5 +1,6 @@
 package com.ratta.controller;
 
+import com.ratta.domain.ActiverUser;
 import com.ratta.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
@@ -114,8 +115,9 @@ public class DemoController {
         try {
             subject.login(token);
             //获取在AuthRealm中SimpleAuthenticationInfo()第一个参数信息
-            User user = (User) subject.getPrincipal();
-            model.addAttribute("user", user);
+            ActiverUser activerUser = (ActiverUser) subject.getPrincipal();
+            //获取token返回前端
+            model.addAttribute("token", activerUser.getToken());
             return new ModelAndView("index", "index", model);
         } catch (UnknownAccountException e) {
             log.error("用户名不存在");
